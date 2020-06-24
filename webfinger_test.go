@@ -66,5 +66,38 @@ func TestHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Println(r)
+	fmt.Println("Subject:", r.Subject)
+
+	fmt.Println("Aliases:")
+	for _, a := range r.Aliases {
+		fmt.Println(" ", a)
+	}
+
+	fmt.Println("Properties:")
+	for k, v := range r.Properties {
+		val := "nil"
+		if v != nil {
+			val = *v
+		}
+		fmt.Println(" ", k, "=", val)
+	}
+
+	fmt.Println("Links:")
+	for _, l := range r.Links {
+		fmt.Println("  Rel:", l.Rel)
+		fmt.Println("  Href:", l.Href)
+		fmt.Println("  Titles:")
+		for k, v := range l.Titles {
+			fmt.Println("   ", k, "=", v)
+		}
+		fmt.Println("  Properties:")
+		for k, v := range l.Properties {
+			val := "nil"
+			if v != nil {
+				val = *v
+			}
+			fmt.Println("   ", k, "=", val)
+		}
+	}
+
 }
