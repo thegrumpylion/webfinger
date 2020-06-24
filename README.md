@@ -9,7 +9,7 @@ u := "https://example.com" + webfinger.DefaultPath
 
 q := webfinger.NewQuery("https://blog.example.com/article/id/314")
 
-c, err := webfinger.NewClient(s.URL)
+c, err := webfinger.NewClient(u)
 if err != nil {
     panic(err)
 }
@@ -32,7 +32,7 @@ func getDB() webfinger.DB {
 
 h := webfinger.NewHandler(getDB(), webfinger.WithAllowOrigin("*"))
 
-http.Handle(wefinger.DefaultPath, h)
+http.Handle(webfinger.DefaultPath, h)
 
 http.ListenAndServe(":8080", nil)
 ```
