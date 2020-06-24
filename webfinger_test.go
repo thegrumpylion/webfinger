@@ -1,10 +1,10 @@
 package webfinger_test
 
 import (
-	"fmt"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/thegrumpylion/webfinger"
 )
 
@@ -50,54 +50,60 @@ func getTestDB() webfinger.DB {
 }
 
 func TestHandler(t *testing.T) {
+
+	assert := assert.New(t)
+
 	h := webfinger.NewHandler(getTestDB(), webfinger.WithAllowOrigin("*"))
 
 	s := httptest.NewServer(h)
 
+	c, err := webfinger.NewClient(s.URL)
+	assert.Nil(err)
+
 	q := webfinger.NewQuery("http://blog.example.com/article/id/314")
 
-	c, err := webfinger.NewClient(s.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	r, err := c.Query(q)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(err)
 
-	fmt.Println("Subject:", r.Subject)
+	assert.Equal("http://blog.example.com/article/id/314", r.Subject)
 
-	fmt.Println("Aliases:")
-	for _, a := range r.Aliases {
-		fmt.Println(" ", a)
-	}
+	assert.Equal([]string{
+		"http://blog.example.com/cool_new_thing",
+		"http://blog.example.com/steve/article/7",
+	}, r.Aliases)
 
-	fmt.Println("Properties:")
-	for k, v := range r.Properties {
-		val := "nil"
-		if v != nil {
-			val = *v
-		}
-		fmt.Println(" ", k, "=", val)
-	}
+	p, ok := r.Properties["http://blgx.example.net/ns/version"]
+	assert.True(ok)
+	assert.NotNil(p)
+	assert.Equal("1.3", *p)
 
-	fmt.Println("Links:")
-	for _, l := range r.Links {
-		fmt.Println("  Rel:", l.Rel)
-		fmt.Println("  Href:", l.Href)
-		fmt.Println("  Titles:")
-		for k, v := range l.Titles {
-			fmt.Println("   ", k, "=", v)
-		}
-		fmt.Println("  Properties:")
-		for k, v := range l.Properties {
-			val := "nil"
-			if v != nil {
-				val = *v
-			}
-			fmt.Println("   ", k, "=", val)
-		}
-	}
+	p, ok = r.Properties["http://blgx.example.net/ns/ext"]
+	assert.True(ok)
+	assert.Nil(p)
+
+	assert.Len(r.Links, 2)
+
+	l0 := r.Links[0]
+	assert.Equal("copyright", l0.Rel)
+	assert.Equal("http://www.example.com/copyright", l0.Href)
+	assert.Equal("copyright", l0.Rel)
+	assert.Equal("copyright", l0.Rel)
+
+	l1 := r.Links[1]
+	assert.Equal("author", l1.Rel)
+	assert.Equal("http://blog.example.com/author/steve", l1.Href)
+
+	t1, ok := l1.Titles["en-us"]
+	assert.True(ok)
+	assert.Equal("The Magical World of Steve", t1)
+
+	t2, ok := l1.Titles["fr"]
+	assert.True(ok)
+	assert.Equal("Le Monde Magique de Steve", t2)
+
+	p, ok = l1.Properties["http://example.com/role"]
+	assert.True(ok)
+	assert.NotNil(p)
+	assert.Equal("editor", *p)
 
 }

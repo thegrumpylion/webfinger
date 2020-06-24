@@ -7,12 +7,12 @@ Webfinger server & client library for Go
 ```go
 u := "https://example.com" + webfinger.DefaultPath
 
-q := webfinger.NewQuery("https://blog.example.com/article/id/314")
-
 c, err := webfinger.NewClient(u)
 if err != nil {
     panic(err)
 }
+
+q := webfinger.NewQuery("https://blog.example.com/article/id/314")
 
 r, err := c.Query(q)
 if err != nil {
